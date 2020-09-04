@@ -120,20 +120,20 @@ body {background-color:#eaeaea;}
 				echo 	'<div class="login-content-row">';
 				echo 		'<fieldset class="login-model-section-fieldset">';
 				echo 			'<div id="signin-prompt-models">';
-				for ($i=1; $i<=$iCnt; $i++)
-				{
-					$sValue 	= SafeGetArrayItem2DimByName($aSettings, 'model_list', 'model' . $i, '');
-					if ( !strIsEmpty($sValue) )
-					{
-						$sValue 		= htmlspecialchars($sValue);
-						$sAccessCode	= SafeGetArrayItem2DimByName($aSettings, 'model' . $i, 'auth_code', '');
-						$sProtocol		= SafeGetArrayItem2DimByName($aSettings, 'model' . $i, 'sscs_protocol', 'http');
-						echo '<label class="login-model-radio-label" for="model' . $i . '">';
-						echo '	<input type="radio" name="modelname" id="model' . $i . '" value="model' . $i . (($i === (int)$sModelNo) ? '" checked="checked"' : '"') . '/>';
-						echo '	<span>' . $sValue . '</span>';
-						echo '</label>';
-					}
-				}
+				// for ($i=1; $i<=$iCnt; $i++)
+				// {
+				// 	$sValue 	= SafeGetArrayItem2DimByName($aSettings, 'model_list', 'model' . $i, '');
+				// 	if ( !strIsEmpty($sValue) )
+				// 	{
+				// 		$sValue 		= htmlspecialchars($sValue);
+				// 		$sAccessCode	= SafeGetArrayItem2DimByName($aSettings, 'model' . $i, 'auth_code', '');
+				// 		$sProtocol		= SafeGetArrayItem2DimByName($aSettings, 'model' . $i, 'sscs_protocol', 'http');
+				// 		echo '<label class="login-model-radio-label" for="model' . $i . '">';
+				// 		echo '	<input type="radio" name="modelname" id="model' . $i . '" value="model' . $i . (($i === (int)$sModelNo) ? '" checked="checked"' : '"') . '/>';
+				// 		echo '	<span>' . $sValue . '</span>';
+				// 		echo '</label>';
+				// 	}
+				// }
 				echo 			'</div>';
 				echo 		'</fieldset>';
 				echo 	'</div>';
@@ -185,7 +185,7 @@ body {background-color:#eaeaea;}
 				{
 					$sErrorMsg = $sErrorMsg . WriteHelpHyperlink();
 				}
-				echo 	'<div class="login-content-row login-padding-btm-20">';
+				echo 	'<div class="login-content-row login-padding-btm-20" id="button-place">';
 				echo '<div id="login-error">' . $sErrorMsg . '</div>';
 				echo '<div class="login-action-buttons-div1"><div class="login-action-buttons-div2">';
 				echo '<input class="login-action-button" type="button" name="back" id="login-back-button" value="' . _glt('Back') . '" ' .  ( ( $sCurrentStep === 'prompt_auth' ) ? '' : ' style="display:none;"') . ' onclick="OnClickLoginBackButton(this)">';
@@ -252,12 +252,59 @@ body {background-color:#eaeaea;}
 <script>
 	var g_modelDetails;
 	var g_deviceLayout;
+	var g_login_first;
 	window.onpageshow = function(event) {
 		if (event.persisted)
 		{
 			LoginNotBusy();
 		}
+		Init();
 	};
+	
+	function Init()
+	{
+		$("#login-error").html('');
+		g_modelDetails = [];
+		g_login_first = false;
+		$("#login-model-section").hide();
+		$(".login-next-button").hide();
+		$('#login-openid-link').hide();
+		$("#login-ssoauth-type-openid").hide();
+		$("#login-back-button").hide();
+		$("#login-finish-button").hide();
+		$("#login-ssoauth-or").hide();
+		$("#login-auth-access-div").hide();
+		$("#login-auth-basic-section").hide();
+		$("#button-place").hide();
+
+		$("#login-auth-section").show();
+		$("#login-auth-sso-section").show();
+		$("#login-ssoauth-type-ntlm").show();
+		$("#login-step").val('prompt_model');
+	}
+
+	function showModel(){
+		$("#login-error").html('');
+		$("#login-model-section").show();
+		$(".login-next-button").show();
+		$("#login-auth-section").hide();
+		$("#login-auth-sso-section").hide();
+		$("#login-ssoauth-type-ntlm").hide();
+		$("#button-place").show();
+	}
+
+	function generateModel(models){
+		let parent = $('#signin-prompt-models');
+		$.each(models, function(i,v){
+			let label = `
+				<label class="login-model-radio-label" for="${i}">
+					<input type="radio" name="modelname" id="${i}" value="${i}"/>
+					<span>${v}</span>
+				</label>`;
+			parent.append(label);
+		});
+	}
+
 	function OnKeyPressLogin(element)
 	{
 		if ($("#login-finish-button").css('display') != 'none')
@@ -330,7 +377,7 @@ body {background-color:#eaeaea;}
 				modelDetails['modelFriendlyName'] = sModelFriendlyName;
 				g_modelDetails = modelDetails;
 					LoginNotBusy();
-					ContinueLogin();
+					OnClickLoginNTLMButton();
 			},
 			error: function(jqXHR)
 			{
@@ -551,6 +598,9 @@ body {background-color:#eaeaea;}
 	{
 		sModelNo = g_modelDetails['modelNumber'];
 		var sURL = './data_api/ntlm/login_ntlm.php';
+		if(!g_login_first){
+			sURL = './data_api/ntlm/login_ldap.php';
+		}
 		$.ajax(
 		{
 			type: "POST",
@@ -567,13 +617,21 @@ body {background-color:#eaeaea;}
 			success: function(response, status, xhr)
 			{
 				let result = $.parseJSON(response);
-				if(result.data.status == 'failed'){
-					let sErrorMessage = result.data.message;
-					webea_error_message(sErrorMessage);
-					ContinueLogin();
-					setTimeout(function(){ window.location.replace('./'+result['url']+''); }, 3000);
-				} else {
-					window.location.replace('./'+result['url']+'');
+				if(!g_login_first) {
+					if(result.response == "success") {
+						showModel();
+						generateModel(result.models);
+						g_login_first = true;
+					}
+				}else{
+					if(result.data.status == 'failed'){
+						let sErrorMessage = result.data.message;
+						webea_error_message(sErrorMessage);
+						Init();
+						setTimeout(function(){ window.location.replace('./'+result['url']+''); }, 3000);
+					} else {
+						window.location.replace('./'+result['url']+'');
+					}
 				}
 				return;
 			},

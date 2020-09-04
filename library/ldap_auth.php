@@ -19,5 +19,5 @@ $distinguised_name    = $conf['dn'];                      // Get DN
 $ldap = new LDAP($ldap_username, $ldap_password, $ldap_criteria, $model_name_mapping, $ldap_host, $distinguised_name);
 $ldap->setUserToFind($sUserID);
 $ldap->connect();
-$response = $ldap->auth();
-echo $response;
+$ldap->auth();
+echo $ldap->getResult();

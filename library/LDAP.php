@@ -16,6 +16,8 @@ class LDAP{
     private $userId;
     private $dn;
     private $url = "index.php";
+    private $group = [];
+    private $result;
     private $response;
 
     public function __construct($username, $password, $ldapCriteria, $modelNameMapping, $ldapHost, $dn){
@@ -25,6 +27,20 @@ class LDAP{
         $this->setModelNameMapping($modelNameMapping);
         $this->setHost($ldapHost);
         $this->setDn($dn);
+    }
+
+    public function toString(){
+        return "username = {$this->username} 
+                password = {$this->password}
+                ldapCriteria = {$this->ldapCriteria}
+                modelNameMapping = {$this->modelNameMapping}
+                host = {$this->host}
+                ldapConnect = {$this->ldapConnect}
+                userId = {$this->userId}
+                dn = {$this->dn}
+                url = {$this->url}
+                group = {$this->group}
+                response = {$this->response}";
     }
 
     public function connect(){
@@ -59,7 +75,8 @@ class LDAP{
                             $group    = str_replace("CN=",'',$group);  // Get the name of member
                             $groups[] = $group;
                         }
-                        if(in_array($this->getModelNameMapping(), $groups)) {
+                        $this->setGroup($groups);
+                        if(in_array($this->getModelNameMapping(), $this->getGroup())) {
                             $this->setResponse('success', 'Member/Group found', $groups);
                         }else{
                             $this->setResponse('failed', "You don't have access of this model");
@@ -78,7 +95,24 @@ class LDAP{
             $this->url = 'logout.php';
         }
 
-        return json_encode(['url' => $this->url, 'data' => $this->getResponse()]);
+        $this->setResult(['url' => $this->url, 'data' => $this->getResponse()]);
+    }
+
+    public function getResult(){
+        return json_encode($this->result);
+    }
+
+    public function setResult($result){
+        $this->result = $result;
+    }
+
+    public function getGroup(){
+        return $this->group;
+    }
+
+    public function setGroup($group){
+        // array_push($this->geGroup(), $group);
+        $this->group = $group;
     }
 
     public function getResponse(){
