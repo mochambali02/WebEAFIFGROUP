@@ -296,11 +296,10 @@ body {background-color:#eaeaea;}
 	function generateModel(models){
 		let parent = $('#signin-prompt-models');
 		$.each(models, function(i,v){
-			let label = `
-				<label class="login-model-radio-label" for="${i}">
-					<input type="radio" name="modelname" id="${i}" value="${i}"/>
-					<span>${v}</span>
-				</label>`;
+			let label = '<label class="login-model-radio-label" for="'+i+'">';
+			label += '<input type="radio" name="modelname" id="'+i+'" value="'+i+'"/>';
+			label += '<span>'+v+'</span>';
+			label += '</label>';
 			parent.append(label);
 		});
 	}
