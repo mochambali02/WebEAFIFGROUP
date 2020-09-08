@@ -140,11 +140,14 @@
     $models = [];
     foreach($groups as $group) {
         foreach($all_model as $key => $model) {
-            if($model == $group) {
+			$model_array = explode(';', $model);
+            if(in_array($group, $model_array)) {
                 $models[$key] = $all_model_name[$key];
             }
         }
-    }
+	}
+	// Sort by Key
+	ksort($models);
 	
 	if ( strIsEmpty($sErrorMsg) )
 	{

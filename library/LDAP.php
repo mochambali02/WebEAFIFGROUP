@@ -76,7 +76,7 @@ class LDAP{
                             $groups[] = $group;
                         }
                         $this->setGroup($groups);
-                        if(in_array($this->getModelNameMapping(), $this->getGroup())) {
+                        if(count(array_intersect($this->getModelNameMapping(), $this->getGroup()))) {
                             $this->setResponse('success', 'Member/Group found', $groups);
                         }else{
                             $this->setResponse('failed', "You don't have access of this model");
