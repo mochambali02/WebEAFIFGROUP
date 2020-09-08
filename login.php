@@ -20,6 +20,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="shortcut icon" href="./favicon.ico?<?php echo filemtime('favicon.ico') ?>" />
 	<link type="text/css" rel="stylesheet" href="styles/webea.css?v=<?php echo g_csWebEAVersion; ?>"/>
+	<link type="text/css" rel="stylesheet" href="styles/custom-login.css"/>
 	<script type="text/javascript" src="js/jquery.min.js"></script>
 	<script type="text/javascript" src="js/webea.js"></script>
 <style>
@@ -139,9 +140,17 @@ body {background-color:#eaeaea;}
 				echo 	'</div>';
 				echo '</div>';
 				echo '<div id="login-auth-section" style="display:none;">';
+				echo 	'<div class="login-section">';
+				echo 		'<div class="login-section-header">';
+				echo 			'<p>Enterprise Architecture</p>';
+				echo 		'</div>';
+				echo 		'<div class="login-section-footer">';
+				echo 			'<img src="images/logo-fif-compress.jpg">';
+				echo 		'</div>';
+				echo	'</div>';
 				echo 	'<div class="login-header-header">';
-				echo 		'<div class="login-header-text">'._glt('Login').'</div>';
-				echo 		'<div id="login-auth-header">'.htmlspecialchars($sModelFriendlyName).'</div>';
+				// echo 		'<div class="login-header-text">'._glt('Login').'</div>';
+				// echo 		'<div id="login-auth-header">'.htmlspecialchars($sModelFriendlyName).'</div>';
 				echo 	'</div>';
 				echo 	'<div class="login-content-row ">';
 				echo 		'<div id="login-auth-sso-section" style="display:none;">';

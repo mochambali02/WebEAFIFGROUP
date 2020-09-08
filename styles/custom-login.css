@@ -1,0 +1,29 @@
+@font-face {
+    font-family: proxima;
+    src: url(fonts/Proxima\ Nova\ Alt\ Bold.otf);
+}
+.login-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    font-family: 'proxima';
+}
+
+.login-section-header {
+    text-align: center;
+    font-weight: 500;
+    font-size: 37px;
+}
+
+.login-section-header p {
+    margin-bottom: 0px;
+}
+
+.login-section-footer {
+    text-align: center;
+}
+
+.login-section-footer img {
+    width: 43%;
+}
