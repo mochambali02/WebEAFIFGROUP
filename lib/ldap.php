@@ -1,5 +1,5 @@
 <?php
-include('..\..\library\utils.php');
+require_once __DIR__ . '/utils.php';
 
 /**
  * Created by Achmad Fatkharrofiqi

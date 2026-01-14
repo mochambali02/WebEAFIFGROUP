@@ -325,6 +325,6 @@ $_SESSION['watchlist_options_model'] = $sWatchListOptions;
 $_SESSION['hide_xml_errors']		= SafeGetArrayItem2DimByName($aSettings, $sModelNameInConfig, 'hide_xml_errors', 'true');
 $sURLLocation = 'location: index.php';
 # add by Achmad Fatkharrofiqi 24/08/2020
-include('..\..\library\ldap_auth.php');
+require_once __DIR__ . '/../lib/ldap_auth.php';
 //header($sURLLocation);
 //exit();

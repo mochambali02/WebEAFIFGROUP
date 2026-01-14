@@ -45,6 +45,13 @@ if ($bRequiresLogin) {
 	exit();
 }
 setcookie('webea_session', session_id(), 0, '/');
+if (!isset($_SESSION['csrf_token']) || strIsEmpty($_SESSION['csrf_token'])) {
+	if (function_exists('random_bytes')) {
+		$_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+	} else {
+		$_SESSION['csrf_token'] = bin2hex(openssl_random_pseudo_bytes(32));
+	}
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -57,6 +64,9 @@ setcookie('webea_session', session_id(), 0, '/');
 	<link type="text/css" rel="stylesheet" href="styles/jquery.datepick.blue.css" />
 	<link rel="shortcut icon" href="./favicon.ico?<?php echo filemtime('favicon.ico') ?>" />
 	<script src="js/jquery.min.js"></script>
+	<script>
+		var g_csrf_token = "<?php echo $_SESSION['csrf_token']; ?>";
+	</script>
 	<script src="js/webea.js"></script>
 	<script src="js/nicedit.js"></script>
 	<script src="js/jquery.plugin.js"></script>

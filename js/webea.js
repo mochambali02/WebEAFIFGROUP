@@ -881,6 +881,7 @@ function load_object2(
         } else {
           document.title = get_page_title(sGUID, sText, "", sHyper);
         }
+        log_access_history(sGUID, sResType);
       }
     },
     error: function (jqXHR) {
@@ -1580,6 +1581,27 @@ function GetResTypeFromGUID(sGUID) {
     sResType = "Watchlist Results";
   }
   return sResType;
+}
+function log_access_history(sGUID, sResType) {
+  if (sGUID === "" || sGUID === "home") {
+    return;
+  }
+  if (sResType !== "Package" && sResType !== "Diagram") {
+    return;
+  }
+  if (typeof g_csrf_token === "undefined" || g_csrf_token === "") {
+    return;
+  }
+  $.ajax({
+    type: "POST",
+    cache: false,
+    url: "./data_api/access_history.php",
+    data: {
+      objectguid: sGUID,
+      restype: sResType,
+      csrf_token: g_csrf_token,
+    },
+  });
 }
 function NavigationHistoryAdd(
   sGUID,

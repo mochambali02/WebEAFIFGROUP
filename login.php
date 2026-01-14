@@ -12,6 +12,13 @@ error_reporting(E_ERROR | E_WARNING | E_NOTICE);
 $sRootPath = dirname(__FILE__);
 require_once $sRootPath . '/globals.php';
 SafeStartSession();
+if (!isset($_SESSION['csrf_token']) || strIsEmpty($_SESSION['csrf_token'])) {
+	if (function_exists('random_bytes')) {
+		$_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+	} else {
+		$_SESSION['csrf_token'] = bin2hex(openssl_random_pseudo_bytes(32));
+	}
+}
 ?>
 <!DOCTYPE html>
 <html>
@@ -24,6 +31,9 @@ SafeStartSession();
 	<link type="text/css" rel="stylesheet" href="styles/webea.css?v=<?php echo g_csWebEAVersion; ?>" />
 	<link type="text/css" rel="stylesheet" href="styles/custom-login.css" />
 	<script type="text/javascript" src="js/jquery.min.js"></script>
+	<script>
+		var g_csrf_token = "<?php echo $_SESSION['csrf_token']; ?>";
+	</script>
 	<script type="text/javascript" src="js/webea.js"></script>
 	<style>
 		body {
@@ -58,7 +68,7 @@ SafeStartSession();
 
 		[type="radio"]:checked+span:before {
 			background: #3777bf;
-			ox-shadow: 0 0 0 3px #555555;
+			box-shadow: 0 0 0 3px #555555;
 		}
 
 		#login-auth-header {
@@ -288,6 +298,7 @@ SafeStartSession();
 		var g_modelDetails;
 		var g_deviceLayout;
 		var g_login_first;
+		var g_login_username;
 		window.onpageshow = function(event) {
 			if (event.persisted) {
 				LoginNotBusy();
@@ -299,6 +310,7 @@ SafeStartSession();
 			$("#login-error").html('');
 			g_modelDetails = [];
 			g_login_first = false;
+			g_login_username = '';
 			$("#login-model-section").hide();
 			$(".login-next-button").hide();
 			$('#login-openid-link').hide();
@@ -546,31 +558,50 @@ SafeStartSession();
 				},
 				url: sURL,
 				success: function(result, status, xhr) {
+					log_login_history(sUserID, g_modelDetails['modelFriendlyName'], 'success', 'basic', '');
 					window.location.replace('./index.php');
 					return;
 				},
 				error: function(xhr, status, error) {
 					$("#login-error").html(xhr.statusText);
+					log_login_history(sUserID, g_modelDetails['modelFriendlyName'], 'failed', 'basic', xhr.statusText);
 				},
 			});
 		}
 
-		function logging(username) {
+		function log_login_history(username, modelName, loginResult, authType, errorMessage) {
+			if (!username) {
+				return;
+			}
+			if (typeof modelName === 'undefined' || modelName === null) {
+				modelName = '';
+			}
+			if (typeof loginResult === 'undefined' || loginResult === null) {
+				loginResult = '';
+			}
+			if (typeof authType === 'undefined' || authType === null) {
+				authType = '';
+			}
+			if (typeof errorMessage === 'undefined' || errorMessage === null) {
+				errorMessage = '';
+			}
 			$.ajax({
 				type: "POST",
 				data: {
 					username: username,
+					model_name: modelName,
+					login_result: loginResult,
+					auth_type: authType,
+					error_message: errorMessage,
+					csrf_token: g_csrf_token,
 				},
-				url: './library/history_login.php',
-				beforeSend: function() {
-					LoginBusy();
-				},
+				url: './lib/login_history.php',
+				beforeSend: function() {},
 				success: function(result, status, xhr) {
-					console.log('logged');
 					return;
 				},
 				error: function(xhr, status, error) {
-					$("#login-error").html(xhr.statusText);
+					return;
 				},
 				complete: function(xhr, status) {
 					LoginNotBusy();
@@ -609,17 +640,21 @@ SafeStartSession();
 							showModel();
 							generateModel(result.models);
 							g_login_first = true;
-							logging(result.username);
+							g_login_username = result.username;
+						} else {
+							log_login_history(g_login_username, '', 'failed', 'ldap', 'LDAP login failed');
 						}
 					} else {
 						if (result.data.status == 'failed') {
 							let sErrorMessage = result.data.message;
 							webea_error_message(sErrorMessage);
+							log_login_history(g_login_username, g_modelDetails['modelFriendlyName'], 'failed', 'ldap', sErrorMessage);
 							Init();
 							setTimeout(function() {
 								window.location.replace('./' + result['url'] + '');
 							}, 3000);
 						} else {
+							log_login_history(g_login_username, g_modelDetails['modelFriendlyName'], 'success', 'ldap', '');
 							window.location.replace('./' + result['url'] + '');
 						}
 					}
@@ -628,6 +663,7 @@ SafeStartSession();
 				error: function(xhr, status, error) {
 					sErrorMessage = "Failed automatic Windows login: " + xhr.statusText;
 					webea_error_message(sErrorMessage);
+					log_login_history(g_login_username, '', 'failed', 'ldap', sErrorMessage);
 					ContinueLogin();
 				},
 				complete: function(xhr, status) {

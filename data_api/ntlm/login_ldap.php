@@ -106,7 +106,7 @@ $ldap_host            = $conf['host'];                    // Get Hostname
 $ldap_username        = $conf['username'];                // Get Username
 $ldap_password        = $conf['password'];                // Get Password
 $distinguised_name    = $conf['dn'];                      // Get DN
-include('..\..\library\LDAP.php');
+require_once __DIR__ . '/../../lib/ldap.php';
 
 $ldap = new LDAP($ldap_username, $ldap_password, $ldap_criteria, $model_name_mapping, $ldap_host, $distinguised_name);
 $ldap->setUserToFind($sUserID);

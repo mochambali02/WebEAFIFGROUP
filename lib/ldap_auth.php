@@ -1,5 +1,5 @@
 <?php
-include('..\..\library\LDAP.php');
+require_once __DIR__ . '/ldap.php';
 
 if (!isset($sUserID) || !isset($sModelNameInConfig)) {
     if (!isset($sUserID))

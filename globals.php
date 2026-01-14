@@ -102,6 +102,39 @@ function SafeStartSession()
 		session_start();
 	}
 }
+function LoadDotEnv($sPath)
+{
+	if (!file_exists($sPath)) {
+		return;
+	}
+	$lines = file($sPath, FILE_IGNORE_NEW_LINES);
+	if ($lines === false) {
+		return;
+	}
+	foreach ($lines as $line) {
+		$line = trim($line);
+		if ($line === '' || $line[0] === '#') {
+			continue;
+		}
+		$iPos = strpos($line, '=');
+		if ($iPos === false) {
+			continue;
+		}
+		$key = trim(substr($line, 0, $iPos));
+		$val = trim(substr($line, $iPos + 1));
+		if ($key === '') {
+			continue;
+		}
+		if ((strlen($val) >= 2) && (($val[0] === '"' && $val[strlen($val) - 1] === '"') || ($val[0] === "'" && $val[strlen($val) - 1] === "'"))) {
+			$val = substr($val, 1, -1);
+		}
+		if (getenv($key) === false) {
+			putenv($key . '=' . $val);
+			$_ENV[$key] = $val;
+			$_SERVER[$key] = $val;
+		}
+	}
+}
 function IsSessionSettingTrue($sName)
 {
 	$sValue = SafeGetInternalArrayParameter($_SESSION, $sName, 'false');
@@ -1117,6 +1150,7 @@ function ParseINIFile2Array($sFilename, $bEncrypt = true)
 {
 	global $gLog;
 	$aSettings = array();
+	LoadDotEnv(dirname(__FILE__) . '/.env');
 	if (file_exists($sFilename)) {
 		$p_ini = parse_ini_file($sFilename, true);
 		foreach ($p_ini as $sNamespace => $properties) {
@@ -1161,6 +1195,24 @@ function ParseINIFile2Array($sFilename, $bEncrypt = true)
 		}
 	} else {
 		$gLog->Write2Log('The configuration file "' . $sFilename . '" was not found.');
+	}
+	$ldapEnvMap = array(
+		'WEBEA_LDAP_HOST' => 'host',
+		'WEBEA_LDAP_DN' => 'dn',
+		'WEBEA_LDAP_CRITERIA' => 'ldap_criteria',
+		'WEBEA_LDAP_USERNAME' => 'username',
+		'WEBEA_LDAP_PASSWORD' => 'password',
+		'WEBEA_PRO_CLOUD_DB_ALIAS' => 'pro_cloud_name_db_alias',
+		'WEBEA_PRO_CLOUD_PORT' => 'pro_cloud_port_db_alias'
+	);
+	foreach ($ldapEnvMap as $envKey => $settingKey) {
+		$envVal = getenv($envKey);
+		if ($envVal !== false && $envVal !== '') {
+			if (!isset($aSettings['ldap_settings'])) {
+				$aSettings['ldap_settings'] = array();
+			}
+			$aSettings['ldap_settings'][$settingKey] = $envVal;
+		}
 	}
 	return $aSettings;
 }
