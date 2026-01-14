@@ -8,4 +8,3 @@
 //  conditions of the accompanying license agreement.
 // --------------------------------------------------------
 echo 'Go to the <a href="../../index.php">WebEA Login</a> page';
-?>
